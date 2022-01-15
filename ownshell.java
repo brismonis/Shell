@@ -10,6 +10,12 @@ class ownshell {
     // fd = filedeskriptor = geöffnete Datei (weil jedes Mal öffnen zu aufwendig wäre)
     // enthält drei Infos
     // beim umlenken wird die geöffnete Datei in einen anderen Prozess verschoben
+
+    // pipe()  creates a pipe, a unidirectional data channel that can be used for interprocess communication.  The array pipefd is
+    //    used to return two file descriptors referring to the ends of the pipe.  pipefd[0] refers to  the  read  end  of  the  pipe.
+    //    pipefd[1]  refers  to the write end of the pipe.  Data written to the write end of the pipe is buffered by the kernel until
+    //    it is read from the read end of the pipe.
+
     final static int stdin = 0;
 	final static int stdout = 1;
     
@@ -24,16 +30,70 @@ class ownshell {
             // splitten bei whitespaces
             //String[] input = br.readLine().split("\\s+");
             
+            // TODO: pipes splitten 
+            String[] pipe_input = br.readLine().split(" \\| ");
+            int pipes = pipe_input.length; // pipe counter
+            //System.out.println(pipes);
+            // System.out.println(Arrays.toString(pipe_input));
+            String[][] chain_input = new String[pipe_input.length][];
+            // Erst die Verkettungen && splitten 
+            for(int p=0; p < pipe_input.length; p++) {
+                //chain_input[p] = pipe_input[p].split("\\s+&&\\s+");
+                chain_input[p] = pipe_input[p].split(" && ");
+                // chain_input[0] ist 1. pipe, chain_input[1] ist 2. pipe usw. (i < pipes)
+                System.out.println(Arrays.toString(chain_input[p]) + p); 
+            }
+            //System.out.println(Arrays.toString(chain_input));
+
+            // chain_input Matrix: 0        1
+            //      0  [nano a] [nano b]
+            //      1  [nano c]
+
+            // Zeilen Spalten Tiefe -> Tiefe 0 ist 1. pipe usw.
+            String[][][] final_input = new String[chain_input.length][][];
+            for(int a=0; a < chain_input.length; a++) {
+                final_input[a] = new String[chain_input[a].length][]; // Zeilen
+                //System.out.println(Arrays.toString(final_input[a]) + a); 
+
+                for(int b=0; b < chain_input[a].length; b++) {
+                String arry[] = chain_input[a][b].split(" ");
+                // System.out.println(arry[0]);
+                // System.out.println(arry[1]);
+                final_input[a][b] = arry;
+
+                //final_input[a] = chain_input[a][b].split(" ");
+                // System.out.println(final_input[0][0][0]); // ist nano 
+                // System.out.println(final_input[0][0][1]); // ist a
+                // das heißt: 1. pipe ist erste Stelle 0, 2. pipe ist erste Stelle 
+                // [0][0][0] bis [0][0][chain_input[0][0].length] usw. also dritte Stelle
+
+                }
+
+            }
+
+            // chain_input Matrix: 0        1       
+            //      0  [nano a] [nano b]
+            //      1  [nano c]
+
             //Aufgabe 2: Verkettung mit && ermöglichen
             // Matrix erstellen
-            String[] input = br.readLine().split("\\s+&&\\s+");
+            //String[] input = br.readLine().split("\\s+&&\\s+");
+            //System.out.println(Arrays.toString(input));
+
             // System.out.print(Arrays.toString(input)); gibt [nano a, nano b, ..]
-            String[][] chain_input = new String[input.length][];
-            for(int i = 0; i<input.length; i++){
+            //String[][][] final_input = new String[chain_input.length][][];
+
+            for(int i = 0; i<chain_input.length; i++){
+                for(int f = 0; f<chain_input[i].length; f++) {
+                    
+                    //final_input[i][f] = chain_input[i][f].split("\\s+");
+
+
+                }
+
                 //\\s+ will split your string on one or more spaces
-                chain_input[i] = input[i].split("\\s+");
                 // gibt [nano, a][nano, b]
-                System.out.println(Arrays.toString(chain_input[i])); 
+                //System.out.println(Arrays.toString(chain_input[i])); 
             }
             //System.out.println(chain_input.length); 
             // für nano a && nano b
@@ -51,76 +111,14 @@ class ownshell {
 					System.out.println(">> shell closed");
 					exit(0);
             }
+
+            // Aufgabe V1/3b Pipes
+
+            // Die erste Pipe "|" verbindet stdout von "du" mit stdin des nächsten Programms, nämlich "grep".
+            // die zu untersuchenden Dateien für grep sind dann stdin von der vorherigen Pipe 
+            int[] pipefd = new int[2];// array für pipe()
             
-            //AUFGABE 3 a&b
-            //stdin und stdout umlenken mit < (stdin), > (stdout) und | (pipes)
-            // "Umlenken" ist der Fachjargon für: Schließen der bisherigen Datei, neu öffnen einer anderen unter derselben Filedeskriptor-Nummer.
-            // Der Filedeskriptor, der von einem erfolgreichen Aufruf von [to open()] zurückgegeben wird, ist der Filedeskriptor mit der niedrigsten Nummer, der derzeit nicht für den Prozess geöffnet ist.
-            // int pipe_count = chain_input.length-1;
-            // //Filedeskriptoren umlenken
-            // int stdin_old = 0; //standard
-            // int stdout_old = 1; //standard
-            // int index_out=0;
-            // int index_in=0;
-            // boolean stdinUmlenken = false;
-            // boolean stdoutUmlenken = false;
-
-            // int newfd = 0;
-
-            // stdin umlenken
-            // for (int i = 0; i < chain_input.length; i++) {
-            //     for (int j = 0; j < chain_input[i].length; j++) { //chain_input[i].length gibt Anzahl Spalten der Reihe i
-            //             if (chain_input[i][j].equals("<")) { //stdin umleiten
-            //                 System.out.println("schleife für < greift");
-            //                 //index_out = j;
-            //                 //  stdinUmlenken = true;
-            //                 String prog2 = chain_input[i][j + 1]; //was nach < folgt soll geöffnet werden
-            //                 // File inFile = new File(path2);
-            //                 //dup2 = duplicate a file descriptor like int dup2(int oldfd, int newfd);
-                            
-            //                 stdin_old = dup2(fd_in, newfd); // backup origin stdin
-            //                 // doku:
-            //                 // int dup2(int oldfd, int newfd);
-            //                // The dup2() system call performs the same task as
-            //               // dup(), but instead of
-            //               // using the lowest-numbered unused file descriptor, it
-            //                // uses the descriptor number specified in newfd. If the
-            //                // descriptor newfd was previously open, it is silently
-            //                // closed before being reused.
-            //                 close(fd_in);
             
-            //                 open(prog2, O_RDONLY); //öffne neue Datei
-            //             //    String[] buffer = new String[input.length - 2];
-            //             //    for (int k = 0; k < buffer.length; k++) {
-            //             //        buffer[k] = input[k];
-            //             //    }
-            //             //    input = buffer;
-            //             //    break;
-            //             } else if(chain_input[i][j].equals(">")) {
-            //                 //index_in = j;
-            //             }
-            //         }
-            // }
-				// ende stdin umlenken
-
-                    // String path3 = null;
-                    // for (int i = 0; i < input.length; i++) {
-                    //     if (input[i].equals(">")) {
-                    //         stdoutUmlenken = true;
-                    //         path3 = input[i + 1];
-                    //         stdout_old = dup2(fd_out, 101); // back up original
-                    //                                         // stdout
-                    //         close(fd_out); // close original stdout
-                    //         open(path3, O_WRONLY | O_CREAT); // open or create new
-                    //                                             // stdout
-                    //         String[] buffer2 = new String[input.length - 2];
-                    //         for (int k = 0; k < buffer2.length; k++) {
-                    //             buffer2[k] = input[k];
-                    //         }
-                    //         input = buffer2;
-                    //     }
-                    // }
-                    // Ende stdout umlenken
             
             
             //Aufgabe 1.3
@@ -235,6 +233,7 @@ class ownshell {
         }
     }   
        
+//AUFGABE V1/3a stdin und stdout umlenken
     static int umlenken (String[] chain_input_std) {
         //AUFGABE 3 a&b
             //stdin und stdout umlenken mit < (stdin), > (stdout) und | (pipes)
