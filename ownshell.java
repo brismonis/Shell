@@ -33,7 +33,7 @@ class ownshell {
                 //\\s+ will split your string on one or more spaces
                 chain_input[i] = input[i].split("\\s+");
                 // gibt [nano, a][nano, b]
-                System.out.print(Arrays.toString(chain_input[i])); 
+                System.out.println(Arrays.toString(chain_input[i])); 
             }
             //System.out.println(chain_input.length); 
             // für nano a && nano b
@@ -72,7 +72,6 @@ class ownshell {
             //     for (int j = 0; j < chain_input[i].length; j++) { //chain_input[i].length gibt Anzahl Spalten der Reihe i
             //             if (chain_input[i][j].equals("<")) { //stdin umleiten
             //                 System.out.println("schleife für < greift");
-            //                 //TODO: Schließen der bisherigen Datei, neu öffnen der anderen mit gleicher fd Nummer
             //                 //index_out = j;
             //                 //  stdinUmlenken = true;
             //                 String prog2 = chain_input[i][j + 1]; //was nach < folgt soll geöffnet werden
@@ -162,19 +161,20 @@ class ownshell {
 
                         if (child_pid == 0) {
                             //System.out.println("chain_input[v] ist:" + chain_input[v]);
-                            int test = umlenken(chain_input[v]);
+                            int uml_ret = umlenken(chain_input[v]);
                             //System.out.println("Return von Umlenken ist:" + test);
-                            if (test < 0) {
+                            if (uml_ret < 0) {
                                 System.out.println("Fehler beim Umlenken.");
                                 //break outerloop;
-                            } else if(test > 0) {
+                            } else if(uml_ret > 0) {
                                 int index = -1;
-                                // TODO: LÄNGE ANPASSEN vom array
                                 for(int c=0; c<chain_input[v].length; c++) {
                                     if (chain_input[v][c].equals("<")) {
                                         index = c;
+                                        break;
                                     } else if(chain_input[v][c].equals(">")) {
                                         index = c;
+                                        break;
                                     }
                                 }
                                 String[] new_arry = new String[index];
@@ -185,13 +185,12 @@ class ownshell {
                                       k++;
                                     //}
                                 }
-                                // TODO: ALLES NACH < und > abschneiden
-                                System.out.println("prog[v] ist: " + prog[v]);
-                                System.out.println("new_arry ist: " + Arrays.toString(new_arry));
+                                // System.out.println("prog[v] ist: " + prog[v]);
+                                // System.out.println("new_arry ist: " + Arrays.toString(new_arry));
                                 execv(prog[v], new_arry); 
                             } else {
-                                System.out.println("prog[v] ist: " + prog[v]);
-                                System.out.println("chain_input[v] ist:" + chain_input[v]);
+                                // System.out.println("prog[v] ist: " + prog[v]);
+                                // System.out.println("chain_input[v] ist:" + Arrays.toString(chain_input[v]));
                                 execv(prog[v], chain_input[v]); 
                             }
                         //    if (in != 0) {
@@ -243,8 +242,8 @@ class ownshell {
             // Der Filedeskriptor, der von einem erfolgreichen Aufruf von [to open()] zurückgegeben wird, ist der Filedeskriptor mit der niedrigsten Nummer, der derzeit nicht für den Prozess geöffnet ist.
         int stdin_new = 0; //standard
         int stdout_new= 1; //standard
-        int index_out=0;
-        int index_in=0;
+        // int index_out=0;
+        // int index_in=0;
         boolean stdinUmlenken = false;
         boolean stdoutUmlenken = false;
 
@@ -257,7 +256,7 @@ class ownshell {
                 //System.out.println(chain_input_std[i][j]);
 
                     if (chain_input_std[i].equals("<")) { //stdin umleiten
-                        System.out.println("schleife für < greift");
+                        // System.out.println("schleife für < greift");
                         stdinUmlenken = true;
                         //index_out = j;
                         //String prog_in = chain_input[i][j + 1]; 
@@ -291,7 +290,7 @@ class ownshell {
                         // System.out.println("1");
                         // return 1;
                     } else if(chain_input_std[i].equals(">")) {
-                        System.out.println("schleife für > greift");
+                        // System.out.println("schleife für > greift");
                         stdoutUmlenken = true;
                         String after_stdout = chain_input_std[i+1];
                         //stdout_new = dup2(stdout, newfd);
@@ -309,7 +308,7 @@ class ownshell {
                 }
         //}
         if (stdinUmlenken == true || stdoutUmlenken == true) {
-            System.out.println("1");
+            // System.out.println("1");
             return 1;
         } else {
             return 0;
