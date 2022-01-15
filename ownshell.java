@@ -10,8 +10,8 @@ class ownshell {
     // fd = filedeskriptor = geöffnete Datei (weil jedes Mal öffnen zu aufwendig wäre)
     // enthält drei Infos
     // beim umlenken wird die geöffnete Datei in einen anderen Prozess verschoben
-    final static int fd_in = 0;
-	final static int fd_out = 1;
+    final static int stdin = 0;
+	final static int stdout = 1;
     
     public static void main(String[] args) throws Exception {
         //Aufgabe 1.1 Zeile einlesen mit Endlosschleife
@@ -159,9 +159,40 @@ class ownshell {
                         System.out.println("Command " + (v+1) + " successfull, starting child process ...");
                         int child_pid = fork();
                         
+
                         if (child_pid == 0) {
-                            if (umlenken(chain_input) != 0) {
-                                System.out.println("Fehler beim Umlenken");
+                            //System.out.println("chain_input[v] ist:" + chain_input[v]);
+                            int test = umlenken(chain_input[v]);
+                            //System.out.println("Return von Umlenken ist:" + test);
+                            if (test < 0) {
+                                System.out.println("Fehler beim Umlenken.");
+                                //break outerloop;
+                            } else if(test > 0) {
+                                int index = -1;
+                                // TODO: LÄNGE ANPASSEN vom array
+                                for(int c=0; c<chain_input[v].length; c++) {
+                                    if (chain_input[v][c].equals("<")) {
+                                        index = c;
+                                    } else if(chain_input[v][c].equals(">")) {
+                                        index = c;
+                                    }
+                                }
+                                String[] new_arry = new String[index];
+
+                                for (int i = 0, k = 0; i < index; i++) {
+                                    //if (i != index) {
+                                      new_arry[k] = chain_input[v][i]; // copying elements to new array
+                                      k++;
+                                    //}
+                                }
+                                // TODO: ALLES NACH < und > abschneiden
+                                System.out.println("prog[v] ist: " + prog[v]);
+                                System.out.println("new_arry ist: " + Arrays.toString(new_arry));
+                                execv(prog[v], new_arry); 
+                            } else {
+                                System.out.println("prog[v] ist: " + prog[v]);
+                                System.out.println("chain_input[v] ist:" + chain_input[v]);
+                                execv(prog[v], chain_input[v]); 
                             }
                         //    if (in != 0) {
                         //        dup2(in, fd_in);
@@ -169,28 +200,17 @@ class ownshell {
                             // Der Kind-Prozess tauscht nun mittels einem Aufruf an execv() seinen Programmcode (den der Shell) gegen den Code aus einer Datei aus.
                             // Der Dateiname ist ein Parameter beim Aufruf von execv(), das außerdem die Wortliste der Kommandozeile erhält (incl. dem Programmnamen selbst)
                             // String rmv_stdin [] = chain_input[v];
-                            int index = -1;
-                            String[] new_arry = new String[chain_input[v].length - 1];
+                            
                             // if (Arrays.asList(chain_input[v]).contains("<")) {
                                 
                             // }
                             // String rmv_stdin1 [] = new String [1];
                             // String rmv_stdin2 [] = new String [1];
-                            for(int c=0; c<chain_input[v].length; c++) {
-                                if (chain_input[v][c].equals("<")) {
-                                    index = c;
-                                } 
-                            }
-                            for (int i = 0, k = 0; i < chain_input[v].length; i++) {
-                                if (i != index) {
-                                  new_arry[k] = chain_input[v][i]; // copying elements to new array
-                                  k++;
-                                }
-                              }
+                            
 
                             // System.out.println(Arrays.toString(new_arry));
                             //execv(prog[v], chain_input[v]); 
-                            execv(prog[v], new_arry); 
+                            //execv(prog[v], new_arry); 
                             // ersetzt den Kindprozess (shell) durch ein Programm, welchem weitere Parameter uebbergeben werden koennen
 
                         } else if (child_pid == -1) {
@@ -216,34 +236,38 @@ class ownshell {
         }
     }   
        
-    static int umlenken (String[][] chain_input) {
+    static int umlenken (String[] chain_input_std) {
         //AUFGABE 3 a&b
             //stdin und stdout umlenken mit < (stdin), > (stdout) und | (pipes)
             // "Umlenken" ist der Fachjargon für: Schließen der bisherigen Datei, neu öffnen einer anderen unter derselben Filedeskriptor-Nummer.
             // Der Filedeskriptor, der von einem erfolgreichen Aufruf von [to open()] zurückgegeben wird, ist der Filedeskriptor mit der niedrigsten Nummer, der derzeit nicht für den Prozess geöffnet ist.
-        int stdin_old = 0; //standard
-        int stdout_old = 1; //standard
+        int stdin_new = 0; //standard
+        int stdout_new= 1; //standard
         int index_out=0;
         int index_in=0;
         boolean stdinUmlenken = false;
         boolean stdoutUmlenken = false;
 
         int newfd = 0;
+        //System.out.println("chain_input_std ist:" + Arrays.toString(chain_input_std));
 
-        for (int i = 0; i < chain_input.length; i++) {
-            for (int j = 0; j < chain_input[i].length; j++) { //chain_input[i].length gibt Anzahl Spalten der Reihe i
-                    if (chain_input[i][j].equals("<")) { //stdin umleiten
-                        // System.out.println("schleife für < greift");
+        for (int i = 0; i < chain_input_std.length; i++) {
+            //System.out.println(chain_input_std[i]);
+            //for (int j = 0; j < chain_input_std[i].length; j++) { //chain_input[i].length gibt Anzahl Spalten der Reihe i
+                //System.out.println(chain_input_std[i][j]);
+
+                    if (chain_input_std[i].equals("<")) { //stdin umleiten
+                        System.out.println("schleife für < greift");
                         stdinUmlenken = true;
                         //index_out = j;
-                        String prog2 = chain_input[i][j + 1]; //was nach < folgt soll geöffnet werden
-                        String after_stdin = chain_input[i][j + 1];
+                        //String prog_in = chain_input[i][j + 1]; 
+                        String after_stdin = chain_input_std[i+1]; //was nach < folgt soll geöffnet werden
                         // System.out.println(prog2);
                         // System.out.println(after_stdin);
                         // File inFile = new File(path2);
                         //dup2 = duplicate a file descriptor like int dup2(int oldfd, int newfd);
                         
-                        stdin_old = dup2(fd_in, newfd); // backup origin stdin
+                        //stdin_new = dup2(stdin, newfd); // backup origin stdin
                         // doku:
                         // int dup2(int oldfd, int newfd);
                        // The dup2() system call performs the same task as
@@ -252,24 +276,125 @@ class ownshell {
                        // uses the descriptor number specified in newfd. If the
                        // descriptor newfd was previously open, it is silently
                        // closed before being reused.
-                        close(fd_in);
+                        close(stdin);
         
-                        newfd = open(prog2, O_RDONLY); //öffne neue Datei
+                        newfd = open(after_stdin, O_RDONLY); //öffne neue Datei
                         if (newfd < 0) {
                             return -1;
-                        }
+                        } 
                     //    String[] buffer = new String[input.length - 2];
                     //    for (int k = 0; k < buffer.length; k++) {
                     //        buffer[k] = input[k];
                     //    }
                     //    input = buffer;
                     //    break;
-                    } else if(chain_input[i][j].equals(">")) {
-                        //index_in = j;
-                    }
+                        // System.out.println("1");
+                        // return 1;
+                    } else if(chain_input_std[i].equals(">")) {
+                        System.out.println("schleife für > greift");
+                        stdoutUmlenken = true;
+                        String after_stdout = chain_input_std[i+1];
+                        //stdout_new = dup2(stdout, newfd);
+                        close(stdout);
+                        newfd = open(after_stdout, O_WRONLY | O_CREAT);
+                        if (newfd < 0) {
+                            return -1;
+                        } 
+                        
+                    } 
+                    // else {
+                    //     System.out.println("0 - no < or > detected");
+                        
+                    // }
                 }
+        //}
+        if (stdinUmlenken == true || stdoutUmlenken == true) {
+            System.out.println("1");
+            return 1;
+        } else {
+            return 0;
         }
-        return 0;
+        
     }
+    
+
+    // static int umlenken (String[][] chain_input_std) {
+    //     //AUFGABE 3 a&b
+    //         //stdin und stdout umlenken mit < (stdin), > (stdout) und | (pipes)
+    //         // "Umlenken" ist der Fachjargon für: Schließen der bisherigen Datei, neu öffnen einer anderen unter derselben Filedeskriptor-Nummer.
+    //         // Der Filedeskriptor, der von einem erfolgreichen Aufruf von [to open()] zurückgegeben wird, ist der Filedeskriptor mit der niedrigsten Nummer, der derzeit nicht für den Prozess geöffnet ist.
+    //     int stdin_new = 0; //standard
+    //     int stdout_new= 1; //standard
+    //     int index_out=0;
+    //     int index_in=0;
+    //     boolean stdinUmlenken = false;
+    //     boolean stdoutUmlenken = false;
+
+    //     int newfd = 0;
+
+    //     for (int i = 0; i < chain_input_std.length; i++) {
+    //         System.out.println(chain_input_std[i]);
+    //         for (int j = 0; j < chain_input_std[i].length; j++) { //chain_input[i].length gibt Anzahl Spalten der Reihe i
+    //             System.out.println(chain_input_std[i][j]);
+
+    //                 if (chain_input_std[i][j].equals("<")) { //stdin umleiten
+    //                     System.out.println("schleife für < greift");
+    //                     stdinUmlenken = true;
+    //                     //index_out = j;
+    //                     //String prog_in = chain_input[i][j + 1]; 
+    //                     String after_stdin = chain_input_std[i][j + 1]; //was nach < folgt soll geöffnet werden
+    //                     // System.out.println(prog2);
+    //                     // System.out.println(after_stdin);
+    //                     // File inFile = new File(path2);
+    //                     //dup2 = duplicate a file descriptor like int dup2(int oldfd, int newfd);
+                        
+    //                     stdin_new = dup2(stdin, newfd); // backup origin stdin
+    //                     // doku:
+    //                     // int dup2(int oldfd, int newfd);
+    //                    // The dup2() system call performs the same task as
+    //                   // dup(), but instead of
+    //                   // using the lowest-numbered unused file descriptor, it
+    //                    // uses the descriptor number specified in newfd. If the
+    //                    // descriptor newfd was previously open, it is silently
+    //                    // closed before being reused.
+    //                     close(stdin);
+        
+    //                     newfd = open(after_stdin, O_RDONLY); //öffne neue Datei
+    //                     if (newfd < 0) {
+    //                         return -1;
+    //                     } else {
+    //                         System.out.println("1");
+    //                         return 1;
+    //                     }
+    //                 //    String[] buffer = new String[input.length - 2];
+    //                 //    for (int k = 0; k < buffer.length; k++) {
+    //                 //        buffer[k] = input[k];
+    //                 //    }
+    //                 //    input = buffer;
+    //                 //    break;
+    //                     // System.out.println("1");
+    //                     // return 1;
+    //                 } else if(chain_input_std[i][j].equals(">")) {
+    //                     stdoutUmlenken = true;
+    //                     String after_stdout = chain_input_std[i][j + 1];
+    //                     stdout_new = dup2(stdout, newfd);
+    //                     close(stdout);
+    //                     newfd = open(after_stdout, O_WRONLY | O_CREAT);
+    //                     if (newfd < 0) {
+    //                         return -1;
+    //                     } else {
+    //                         System.out.println("1");
+    //                         return 1;
+    //                     }
+                        
+    //                 } else {
+    //                     System.out.println("0 - no < or > detected");
+    //                     return 0;
+    //                 }
+    //             }
+    //     }
+    //     System.out.println("1");
+    //     return 1;
+    // }
     
 }
