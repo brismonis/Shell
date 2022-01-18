@@ -31,8 +31,8 @@ class ownshell {
             //String[] input = br.readLine().split("\\s+");
             
             // TODO: pipes splitten 
-            String[] pipe_input = br.readLine().split(" \\| ");
-            int pipes = pipe_input.length; // pipe counter
+            String[] pipe_input = br.readLine().split("\\|\\s+");
+            //int pipes = pipe_input.length; // pipe counter
             //System.out.println(pipes);
             // System.out.println(Arrays.toString(pipe_input));
             String[][] chain_input = new String[pipe_input.length][];
@@ -57,7 +57,7 @@ class ownshell {
                 //System.out.println(Arrays.toString(final_input[a]) + a); 
 
                 for(int b=0; b < chain_input[a].length; b++) {
-                String arry[] = chain_input[a][b].split(" "); // one or more spaces "\\s+"
+                String arry[] = chain_input[a][b].split("\\s+"); // one or more spaces "\\s+"
                 // System.out.println(arry[0]);
                 // System.out.println(arry[1]);
                 final_input[a][b] = arry;
@@ -90,8 +90,8 @@ class ownshell {
             
             // bei exit shell verlassen
             if (final_input[0][0][0].equals("exit")) {
-					System.out.println(">> shell closed");
-					exit(0);
+                System.out.println(">> shell closed");
+                exit(0);
             }
 
             // Aufgabe V1/3b Pipes
@@ -112,10 +112,6 @@ class ownshell {
 
             int[] pipefd = new int[2];// array für pipe()
             
-            if(pipes > 1) {
-
-            }
-            
             
             //Aufgabe 1.3
             // die vom System vorgegebenen Pfade werden später nach der auszuführenden Datei durchsucht
@@ -128,9 +124,9 @@ class ownshell {
             boolean[][] valid = new boolean[final_input.length][];
             
             //System wird nach Dateiname durchsucht
-            for(int h=0; h < final_input.length; h++) {
+            for(int h=0; h < final_input.length; h++) { //alle pipes durchgehen
                 //System.out.println("Erste Schleife:" + h);
-                valid[h] = new boolean[final_input[h].length]; // Zeilen
+                valid[h] = new boolean[final_input[h].length]; // 
                 prog[h] = new String[final_input[h].length]; // Zeilen
                 //System.out.println(final_input.length); // 2
                 for(int j = 0; j < final_input[h].length; j++) {
@@ -142,7 +138,7 @@ class ownshell {
                         if (file.isFile() && file.canExecute()) {
                             //System.out.println(file);
                             prog[h][j] = path[i] + "/" + final_input[h][j][0];
-                            System.out.println(prog[h][j]);
+                            //System.out.println(prog[h][j]);
                             valid[h][j] = true;
                             //System.out.println(valid[h][j]);
                             break;
@@ -181,93 +177,104 @@ class ownshell {
             //int retcode = 0;
 
             // ab hier
-        //     outerloop: {
-        //         for(int v = 0; v < chain_input.length; v++) {
-        //             if (valid[v] == false) {
-        //                 // System.err.println("ERROR: Command " + (v+1) + " has no valid program name.");
-        //                 System.err.println("ERROR: Either no valid program name or command wasn't successfull.");
-        //                 break;
-        //             } else {
-        //                 //starte Kindprozess
-        //                 System.out.println("Command " + (v+1) + " successfull, starting child process ...");
-        //                 int child_pid = fork();
+            outerloop: {
+            for(int h=0; h < final_input.length; h++) { // alle pipes durchgehen
+
+                for(int v = 0; v < final_input[h].length; v++) {
+                    if (valid[h][v] == false) {
+                        // System.err.println("ERROR: Command " + (v+1) + " has no valid program name.");
+                        System.err.println("ERROR: No valid program name.");
+                        break;
+                    } else {
+                        //starte Kindprozess
+                        //System.out.println("Command " + (v+1) + " successfull, starting child process ...");
+                        System.out.println("SUCCESS: Starting child process ...");
+
+                        int child_pid = fork();
                         
+                        if (child_pid == 0) {
+                            //System.out.println("chain_input[v] ist:" + chain_input[v]);
+                            int uml_ret = umlenken(final_input[h][v]);
+                            //System.out.println("final_input[h][v] ist:" + Arrays.toString(final_input[h][v]));
+                            //System.out.println("Return von Umlenken ist:" + test);
+                            if (uml_ret < 0) {
+                                System.err.println("ERROR: Fehler beim Umlenken.");
+                                //break outerloop;
+                            } else if(uml_ret > 0) {
+                                //System.out.println("greift uml_ret = 1");
+                                int index = -1;
+                                for(int c=0; c<final_input[h][v].length; c++) {
+                                    if (final_input[h][v][c].equals("<")) {
+                                        System.out.println(final_input[h][v][c]);
+                                        index = c;
+                                        break;
+                                    } else if(final_input[h][v][c].equals(">")) {
+                                        index = c;
+                                        break;
+                                    }
+                                }
+                                String[] new_arry = new String[index];
 
-        //                 if (child_pid == 0) {
-        //                     //System.out.println("chain_input[v] ist:" + chain_input[v]);
-        //                     int uml_ret = umlenken(chain_input[v]);
-        //                     //System.out.println("Return von Umlenken ist:" + test);
-        //                     if (uml_ret < 0) {
-        //                         System.out.println("Fehler beim Umlenken.");
-        //                         //break outerloop;
-        //                     } else if(uml_ret > 0) {
-        //                         int index = -1;
-        //                         for(int c=0; c<chain_input[v].length; c++) {
-        //                             if (chain_input[v][c].equals("<")) {
-        //                                 index = c;
-        //                                 break;
-        //                             } else if(chain_input[v][c].equals(">")) {
-        //                                 index = c;
-        //                                 break;
-        //                             }
-        //                         }
-        //                         String[] new_arry = new String[index];
+                                for (int i = 0, k = 0; i < index; i++) {
+                                    //if (i != index) {
+                                      new_arry[k] = final_input[h][v][i]; // copying elements to new array
+                                      k++;
+                                    //}
+                                }
+                                // System.out.println("prog[v] ist: " + prog[v]);
+                                // System.out.println("new_arry ist: " + Arrays.toString(new_arry));
+                                execv(prog[h][v], new_arry); 
+                            } else {
+                                //System.out.println("greift uml_ret = 0");
 
-        //                         for (int i = 0, k = 0; i < index; i++) {
-        //                             //if (i != index) {
-        //                               new_arry[k] = chain_input[v][i]; // copying elements to new array
-        //                               k++;
-        //                             //}
-        //                         }
-        //                         // System.out.println("prog[v] ist: " + prog[v]);
-        //                         // System.out.println("new_arry ist: " + Arrays.toString(new_arry));
-        //                         execv(prog[v], new_arry); 
-        //                     } else {
-        //                         // System.out.println("prog[v] ist: " + prog[v]);
-        //                         // System.out.println("chain_input[v] ist:" + Arrays.toString(chain_input[v]));
-        //                         execv(prog[v], chain_input[v]); 
-        //                     }
-        //                 //    if (in != 0) {
-        //                 //        dup2(in, fd_in);
-        //                 //    }
-        //                     // Der Kind-Prozess tauscht nun mittels einem Aufruf an execv() seinen Programmcode (den der Shell) gegen den Code aus einer Datei aus.
-        //                     // Der Dateiname ist ein Parameter beim Aufruf von execv(), das außerdem die Wortliste der Kommandozeile erhält (incl. dem Programmnamen selbst)
-        //                     // String rmv_stdin [] = chain_input[v];
+                                // System.out.println("prog[v] ist: " + prog[v]);
+                                // System.out.println("chain_input[v] ist:" + Arrays.toString(chain_input[v]));
+                                execv(prog[h][v], final_input[h][v]); 
+                            }
+                        //    if (in != 0) {
+                        //        dup2(in, fd_in);
+                        //    }
+                            // Der Kind-Prozess tauscht nun mittels einem Aufruf an execv() seinen Programmcode (den der Shell) gegen den Code aus einer Datei aus.
+                            // Der Dateiname ist ein Parameter beim Aufruf von execv(), das außerdem die Wortliste der Kommandozeile erhält (incl. dem Programmnamen selbst)
+                            // String rmv_stdin [] = chain_input[v];
                             
-        //                     // if (Arrays.asList(chain_input[v]).contains("<")) {
+                            // if (Arrays.asList(chain_input[v]).contains("<")) {
                                 
-        //                     // }
-        //                     // String rmv_stdin1 [] = new String [1];
-        //                     // String rmv_stdin2 [] = new String [1];
+                            // }
+                            // String rmv_stdin1 [] = new String [1];
+                            // String rmv_stdin2 [] = new String [1];
                             
 
-        //                     // System.out.println(Arrays.toString(new_arry));
-        //                     //execv(prog[v], chain_input[v]); 
-        //                     //execv(prog[v], new_arry); 
-        //                     // ersetzt den Kindprozess (shell) durch ein Programm, welchem weitere Parameter uebbergeben werden koennen
+                            // System.out.println(Arrays.toString(new_arry));
+                            //execv(prog[v], chain_input[v]); 
+                            //execv(prog[v], new_arry); 
+                            // ersetzt den Kindprozess (shell) durch ein Programm, welchem weitere Parameter uebbergeben werden koennen
 
-        //                 } else if (child_pid == -1) {
-        //                     System.err.println("An error occurred.");
-        //                     // Aufgabe 2: Wenn ein Programm der Verkettung fehlschlägt, sollen die weiteren Kommandos nicht ausgeführt werden
-        //                     exit(1);
-        //                     //retcode = -1;
-        //                     System.out.println("Ein Programm ist fehlgeschlagen, ganze Kette abgebrochen.");
-        //                     break outerloop; 
-        //                     //error = true;
+                        } else if (child_pid == -1) {
+                            //System.err.println("An error occurred.");
+                            System.err.println("ERROR: fork responded with error.");
+                            // Aufgabe 2: Wenn ein Programm der Verkettung fehlschlägt, sollen die weiteren Kommandos nicht ausgeführt werden
+                            exit(1);
+                            //retcode = -1;
+                            
+                            break outerloop; 
+                            //error = true;
 
-        //                 } else { // Elternprozess
+                        } else { // Elternprozess
         
-        //                     //System.out.println("Command " + (v+1) + " was successfull.");
-        //                     int[] status = new int[1];
-        //                     //waitpid teilt Returncode dem Elternprozess mit
-        //                     if(waitpid(child_pid, status, 0)<0){
-        //                         exit(1);
-        //                     }
-        //                 }
+                            //System.out.println("Command " + (v+1) + " was successfull.");
+                            int[] status = new int[1];
+                            //waitpid teilt Returncode dem Elternprozess mit
+                            if(waitpid(child_pid, status, 0)<0){
+                                System.err.println("ERROR: Child Process responded with error.");
+                                exit(1);
+                            }
+                        }
 
-        //             }   
-        //             }
-        //         }
+                    }   
+                    }
+                }
+            }
         // bis hier
         }
         
@@ -290,6 +297,7 @@ class ownshell {
         //System.out.println("chain_input_std ist:" + Arrays.toString(chain_input_std));
 
         for (int i = 0; i < chain_input_std.length; i++) {
+            
             //System.out.println(chain_input_std[i]);
             //for (int j = 0; j < chain_input_std[i].length; j++) { //chain_input[i].length gibt Anzahl Spalten der Reihe i
                 //System.out.println(chain_input_std[i][j]);
@@ -344,7 +352,7 @@ class ownshell {
                     //     System.out.println("0 - no < or > detected");
                         
                     // }
-                }
+        }
         //}
         if (stdinUmlenken == true || stdoutUmlenken == true) {
             // System.out.println("1");
