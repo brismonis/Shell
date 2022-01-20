@@ -16,6 +16,7 @@ class ownshell {
     //    pipefd[1]  refers  to the write end of the pipe.  Data written to the write end of the pipe is buffered by the kernel until
     //    it is read from the read end of the pipe.
 
+    // Standardwerte
     final static int stdin = 0;
 	final static int stdout = 1;
     
@@ -31,9 +32,11 @@ class ownshell {
             //String[] input = br.readLine().split("\\s+");
             
             // TODO: pipes splitten 
-            String[] pipe_input = br.readLine().split("\\|\\s+");
-            //int pipes = pipe_input.length; // pipe counter
-            //System.out.println(pipes);
+            String[] pipe_input = br.readLine().split(" \\| ");
+            int pipes = pipe_input.length-1; // pipe counter
+            System.out.println("pipes: " + pipes);
+            final String dir = System.getProperty("user.dir");
+            //System.out.println(dir);
             // System.out.println(Arrays.toString(pipe_input));
             String[][] chain_input = new String[pipe_input.length][];
             // Erst die Verkettungen && splitten 
@@ -60,17 +63,28 @@ class ownshell {
                 String arry[] = chain_input[a][b].split("\\s+"); // one or more spaces "\\s+"
                 // System.out.println(arry[0]);
                 // System.out.println(arry[1]);
-                final_input[a][b] = arry;
+                
+                    for(int el=0;  el<arry.length; el++) {
+                        if(arry[el].equals("*")) {
+                            System.out.println("klappt");
+                            arry[el] = dir;
+                            System.out.println(Arrays.toString(arry));
+                        }
+                    }
 
+                    final_input[a][b] = arry;
+                }
                 //final_input[a] = chain_input[a][b].split(" ");
                 // System.out.println(final_input[0][0][0]); // ist nano 
                 // System.out.println(final_input[0][0][1]); // ist a
                 // das heißt: 1. pipe ist erste Stelle 0, 2. pipe ist erste Stelle 
                 // [0][0][0] bis [0][0][chain_input[0][0].length] usw. also dritte Stelle
 
-                }
+                
 
             }
+
+            
 
             //String[] input = br.readLine().split("\\s+&&\\s+");
             //System.out.println(Arrays.toString(input));
@@ -93,24 +107,6 @@ class ownshell {
                 System.out.println(">> shell closed");
                 exit(0);
             }
-
-            // Aufgabe V1/3b Pipes
-            // du -sm * | grep '^[0-9]\{4,\}' | sort -n > xxx
-            // Die erste Pipe "|" verbindet stdout von "du" mit stdin des nächsten Programms, nämlich "grep".
-            // die zu untersuchenden Dateien für grep sind dann stdin von der vorherigen Pipe 
-            // int pipe(int[] fd):
-            // for interprocess communication.  The array pipefd is used to return two file descriptors referring to 
-            // the ends of the pipe.  pipefd[0] refers to  the  read  end  of  the  pipe. pipefd[1]  refers  to the 
-            // write end of the pipe.  Data written to the write end of the pipe is buffered by the kernel until 
-            // it is read from the read end of the pipe.
-            // int dup2(int oldfd, int newfd): creates a copy of the file descriptor oldfd, , it
-            // uses the file descriptor number specified in newfd
-            // If oldfd is a valid file descriptor, and newfd has the same value as oldfd, then dup2() does nothing, and returns newfd.
-
-            // Also: wenn Pipe vorhanden, also wenn mein 3D Array an erster stelle > 0 ist (oder pipes>1), dann pipe nutzen und für pipefd[1] die fd der ersten Pipe übergeben? 
-            // und bei der 2. pipe dann das read end also pipefd[0] abfragen und nutzen um Kommando zu "vervollständigen"
-
-            int[] pipefd = new int[2];// array für pipe()
             
             
             //Aufgabe 1.3
@@ -124,7 +120,7 @@ class ownshell {
             boolean[][] valid = new boolean[final_input.length][];
             
             //System wird nach Dateiname durchsucht
-            for(int h=0; h < final_input.length; h++) { //alle pipes durchgehen
+            for(int h=0; h < final_input.length; h++) { //alle pipes durchgehen 
                 //System.out.println("Erste Schleife:" + h);
                 valid[h] = new boolean[final_input[h].length]; // 
                 prog[h] = new String[final_input[h].length]; // Zeilen
@@ -152,12 +148,12 @@ class ownshell {
             }
 
             // prints valid matrix
-            for (int i = 0; i < valid.length; i++) {
-                for (int j = 0; j < valid[i].length; j++) {
-                    System.out.print(valid[i][j] + " ");
-                }
-                System.out.println();
-            }
+            // for (int i = 0; i < valid.length; i++) {
+            //     for (int j = 0; j < valid[i].length; j++) {
+            //         System.out.print(valid[i][j] + " ");
+            //     }
+            //     System.out.println();
+            // }
 
             // vor den Pipes für 2D Matrix:
             // for(int j = 0; j < chain_input.length; j++) {
@@ -174,11 +170,53 @@ class ownshell {
             //     }
             // }
             
-            //int retcode = 0;
+            // Aufgabe V1/3b Pipes
+            // du -sm * | grep '^[0-9]\{4,\}' | sort -n > xxx
+            // Die erste Pipe "|" verbindet stdout von "du" mit stdin des nächsten Programms, nämlich "grep".
+            // die zu untersuchenden Dateien für grep sind dann stdin von der vorherigen Pipe 
+            // int pipe(int[] fd):
+            // for interprocess communication.  The array pipefd is used to return two file descriptors referring to 
+            // the ends of the pipe.  pipefd[0] refers to  the  read  end  of  the  pipe. pipefd[1]  refers  to the 
+            // write end of the pipe.  Data written to the write end of the pipe is buffered by the kernel until 
+            // it is read from the read end of the pipe.
+            // int dup2(int oldfd, int newfd): creates a copy of the file descriptor oldfd, , it
+            // uses the file descriptor number specified in newfd
+            // If oldfd is a valid file descriptor, and newfd has the same value as oldfd, then dup2() does nothing, and returns newfd.
+
+            // Also: wenn Pipe vorhanden, also wenn mein 3D Array an erster stelle > 0 ist (oder pipes>1), dann pipe() nutzen und für pipefd[1] die fd der ersten Pipe übergeben? 
+            // und bei der 2. pipe dann das read end also pipefd[0] abfragen und nutzen um Kommando zu "vervollständigen"
+
+            //int[] pipefd = new int[2];// array für pipe()
+            
+            int stdin_new = stdin;
+			int stdout_new = stdout;
+            int[] pipefd = {stdin, stdout};
 
             // ab hier
             outerloop: {
             for(int h=0; h < final_input.length; h++) { // alle pipes durchgehen
+                // bevors in die nächste pipe geht: aktuelles read und write end speichern
+                System.out.println("PIPE ANFANG");
+                stdin_new = pipefd[0];
+			    stdout_new = pipefd[1];
+                pipefd[0] = stdin;
+                pipefd[1] = stdout;
+                // A pipe is created using pipe(2), which creates a new pipe and returns two file descriptors
+                System.out.println("Read end of pipe [0]: " + pipefd[0] + " Write end of pipe [1]: " + pipefd[1]);
+                System.out.println("stdin_new und stdout_new: " + stdin_new + " " + stdout_new);
+
+                if(pipes > 0) {
+                    if (pipe(pipefd) == -1) {
+                        System.err.println("ERROR: Pipe error.");
+                    }
+                    pipes = pipes-1;
+                    System.out.println("pipes-1: " + pipes);
+
+                }
+                System.out.println("Read end of pipe [0]: " + pipefd[0] + " Write end of pipe [1]: " + pipefd[1]);
+                // if(final_input.length-1 > 0) {
+                
+                // für nano a -> 4 5 -> JETZT UMLENKEN zu 0 und 1
 
                 for(int v = 0; v < final_input[h].length; v++) {
                     if (valid[h][v] == false) {
@@ -186,6 +224,7 @@ class ownshell {
                         System.err.println("ERROR: No valid program name.");
                         break;
                     } else {
+                        
                         //starte Kindprozess
                         //System.out.println("Command " + (v+1) + " successfull, starting child process ...");
                         System.out.println("SUCCESS: Starting child process ...");
@@ -193,6 +232,33 @@ class ownshell {
                         int child_pid = fork();
                         
                         if (child_pid == 0) {
+                            //System.out.println("Read end of pipe [0]: " + pipefd[0] + " Write end of pipe [1]: " + pipefd[1]);
+
+
+                            // du -h | grep '^[0-9]\{1,\}' | sort -n > xxx
+                            // du -hs * | grep '^[0-9]\{1,\}' zeigt alles im aktuellen Verzeichnis 
+                            // du -hs ~/labor-2021/shell_versuch | grep '^[0-9]\{1,\}'
+                            // du -h | sort > sdf (speichert Größe von 2 Dateien in sdf, cTools unten)
+                            
+                            if(stdin_new != stdin) {
+                                System.out.println("Set Pipe for Read");
+                                close(stdout_new);
+                                // dup2(new_stdin, STDIN_FILENO);
+                                // close(new_stdin);
+                                // System.err.println("Set Pipe for Read");
+
+                                //dup2(in, fd_in);
+				                //close(in);
+                                // stdin_new duplizieren nach stdin
+                                //int err = dup2(stdin_new, stdin);
+                                if (dup2(stdin_new, stdin) == -1) {
+                                    System.err.println("Dup2 error.");
+                                }
+                                if(close(stdin_new) == -1){
+                                    System.err.println("stdin_new close error.");
+                                }
+                            }
+
                             //System.out.println("chain_input[v] ist:" + chain_input[v]);
                             int uml_ret = umlenken(final_input[h][v]);
                             //System.out.println("final_input[h][v] ist:" + Arrays.toString(final_input[h][v]));
@@ -223,13 +289,52 @@ class ownshell {
                                 }
                                 // System.out.println("prog[v] ist: " + prog[v]);
                                 // System.out.println("new_arry ist: " + Arrays.toString(new_arry));
+
+                                if(pipefd[1] != stdout) {
+                                    close(pipefd[0]);
+                                    System.out.println("Set Pipe for Write");
+                                    int err = dup2(pipefd[1], stdout);
+                                    if (err == -1) {
+                                        System.err.println("Dup2 error.");
+                                    }
+                                    if(close(pipefd[1]) == -1) {
+                                        System.err.println("stdout close error.");
+                                    }
+    
+                                }
+
+                                
                                 execv(prog[h][v], new_arry); 
+                                // close(pipefd[1]);
+						        // in = pipefd[0];
                             } else {
-                                //System.out.println("greift uml_ret = 0");
+                                System.out.println("greift uml_ret = 0 (kein Umlenken mit < >");
 
                                 // System.out.println("prog[v] ist: " + prog[v]);
                                 // System.out.println("chain_input[v] ist:" + Arrays.toString(chain_input[v]));
+                                if(pipefd[1] != stdout) {
+                                    System.out.println("Set Pipe for Write");
+                                    close(pipefd[0]); // close unused read
+                                    //int err = dup2(pipefd[1], stdout);
+                                    if (dup2(pipefd[1], stdout) == -1) {
+                                        System.err.println("Dup2 error.");
+                                    }
+                                    if(close(pipefd[1]) == -1) {
+                                        System.err.println("stdout close error.");
+                                    }
+    
+                                }
+
+                                // close(pipefd[1]);
+						        // in = pipefd[0];
+                                // String[] n_arry = new String [final_input[h][v].length];
+                                // for(int w=0; w < final_input[h][v].length; w++) {
+
+                                // }
+                                
+                                System.out.println(Arrays.toString(final_input[h][v]));
                                 execv(prog[h][v], final_input[h][v]); 
+                                //execv(prog[h][v], n_arry); 
                             }
                         //    if (in != 0) {
                         //        dup2(in, fd_in);
@@ -261,7 +366,12 @@ class ownshell {
                             //error = true;
 
                         } else { // Elternprozess
-        
+                            //if(pipes == 0) {
+                                if(stdin_new!=stdin && stdout_new!=stdout) {
+                                    close(stdin_new);
+                                    close(stdout_new);
+                            }
+                            //}
                             //System.out.println("Command " + (v+1) + " was successfull.");
                             int[] status = new int[1];
                             //waitpid teilt Returncode dem Elternprozess mit
@@ -269,11 +379,16 @@ class ownshell {
                                 System.err.println("ERROR: Child Process responded with error.");
                                 exit(1);
                             }
+                            
                         }
 
                     }   
                     }
                 }
+                // System.out.println("Nach Pipe: new stdin und stdout auf pipfd[0] und [1] setzen: " + pipefd[0] + " " + pipefd[1]);
+                // stdin_new = pipefd[0];
+			    // stdout_new = pipefd[1];
+                
             }
         // bis hier
         }
@@ -348,10 +463,7 @@ class ownshell {
                         } 
                         
                     } 
-                    // else {
-                    //     System.out.println("0 - no < or > detected");
-                        
-                    // }
+                    
         }
         //}
         if (stdinUmlenken == true || stdoutUmlenken == true) {
